@@ -1,0 +1,3 @@
+﻿  LabDemo1.cpp
+E:\Documents\WorkSpace\LabDemo1\LabDemo1.cpp(71,13): warning C4101: 'errCode': unreferenced local variable
+  LabDemo1.vcxproj -> E:\Documents\WorkSpace\LabDemo1\x64\Debug\LabDemo1.exe
