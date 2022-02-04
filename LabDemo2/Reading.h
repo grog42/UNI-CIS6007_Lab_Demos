@@ -5,6 +5,7 @@
 
 using namespace std;
 
+/*Structure used to store data related to light or temperature readings*/
 struct Reading
 {
 	string type;
@@ -18,6 +19,7 @@ public:
 		timestamp = _timestamp;
 	}
 
+	/* << operator used for outputing the content of the reading to the console*/
 	friend ostream& operator<<(ostream& out, const Reading& r) {
 		out << "Reading:{type=" << r.type << ", value=" << r.value << ", timestamp=" << r.timestamp << "}" << endl;
 		return out;

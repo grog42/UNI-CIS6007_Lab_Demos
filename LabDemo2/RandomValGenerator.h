@@ -4,20 +4,21 @@
 
 using namespace std;
 
-template<typename T>
-class RandomValGenerator{
+/*A template class used to generate random float values*/
+class RandomFloatGenerator{
 private:
 	default_random_engine re;
-	uniform_real_distribution<double> dist;
+	uniform_real_distribution<float> dist;
 
 public:
 
-	RandomValGenerator(T low, T high) :
+	/*Constructor taking paramaters to set the range in which values will be generated*/
+	RandomFloatGenerator(float low, float high) :
 		dist{ low, high } {}
 
-	T operator()() {
-
-		return (T)dist(re);
+	/*This function generates and returns the next random value*/
+	float operator()() {
+		return (float)dist(re);
 	}
 };
 

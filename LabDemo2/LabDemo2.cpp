@@ -12,22 +12,22 @@
 using namespace std;
 using namespace std::chrono;
 
-Reading PopReading(mutex& mu, queue<Reading>& readings) {
-	unique_lock<mutex> lock(mu);
-	Reading r = readings.front();
-	readings.pop();
+queue<Reading> readings;
 
-	return r;
-}
+mutex mu;
+condition_variable cond;
 
-void PushReading(Reading r, mutex& mu, queue<Reading>& readings) {
+/*Function used by both producer threads to add readings to the queue*/
+void PushReading(Reading r) {
 	unique_lock<mutex> lock(mu);
 	readings.push(r);
+	cond.notify_one();
 }
 
-void ReadTempValuses(int delay_ms, mutex& mu, queue<Reading>& readings) {
+/*Thread used for "reading" (generating) temerature values to be pushed to the queue*/
+void ReadTempValuses(int delay_ms) {
 
-	RandomValGenerator<float> randVal(0, 100);
+	RandomFloatGenerator randVal(32, 45);
 
 	while (true)
 	{
@@ -35,13 +35,14 @@ void ReadTempValuses(int delay_ms, mutex& mu, queue<Reading>& readings) {
 
 		float val = randVal();
 		auto t_now = system_clock::now();
-		PushReading(Reading("Temp", val, system_clock::to_time_t(t_now)), mu, readings);
+		PushReading(Reading("Temp", val, system_clock::to_time_t(t_now)));
 	}
 }
 
-void ReadLightValues(int delay_ms, mutex& mu, queue<Reading>& readings) {
+/*Thread used for "reading" (generating) light values to be pushed to the queue*/
+void ReadLightValues(int delay_ms) {
 
-	RandomValGenerator<float> randVal(0, 100);
+	RandomFloatGenerator randVal(50, 150);
 
 	while (true)
 	{
@@ -49,61 +50,74 @@ void ReadLightValues(int delay_ms, mutex& mu, queue<Reading>& readings) {
 
 		float val = randVal();
 		auto t_now = system_clock::now();
-		PushReading(Reading("Light", val, system_clock::to_time_t(t_now)), mu, readings);
+		PushReading(Reading("Light", val, system_clock::to_time_t(t_now)));
+	}
+}
+
+/*Thread used to process readings added to the queue*/
+void HandleReadings() {
+
+	//Varables used to simulate devices reacting to sensor readings
+	int tempOutput = 0;
+	int lightOutput = 0;
+
+	//Stores reading which have already been processed
+	vector<Reading> handledReadings{};
+
+	while (true)
+	{
+		unique_lock<mutex> lock(mu);
+
+		cond.wait(lock, []() {return !readings.empty();});
+
+		const Reading r = readings.front();
+		readings.pop();
+
+		if (r.type == "Temp") {
+
+			//Temp values are used in a feedback loop to keep the temperature around 37 degrees
+			if (r.value > 37) {
+				tempOutput--;
+			}
+			else
+			{
+				tempOutput++;
+			}
+		}
+		else if (r.type == "Light")
+		{
+			//Light values are used in a feedback loop to keep the level around 100 lux
+			if (r.value > 100) {
+				tempOutput--;
+			}
+			else
+			{
+				tempOutput++;
+			}
+		}
+		else
+		{
+			cout << "Reading type un-recognised" << endl;
+		}
+
+		cout << r;
+		handledReadings.push_back(r);
 	}
 }
 
 int main()
 {
-	queue<Reading> readings{};
-	vector<Reading> handledReadings{};
-
 	int readingDelay_ms;
-	int tempOutput = 0;
-	int lightOutput = 0;
 
+	//User uses the console to input the time delay between readings (milliseconds)
 	cout << "Input reading delay in ms:";
 	cin >> readingDelay_ms;
 
-	mutex mu;
-
-	thread tempReader(ReadTempValuses, readingDelay_ms, ref(mu), ref(readings));
-	thread lightReader(ReadLightValues, readingDelay_ms, ref(mu), ref(readings));
-
-	while (true)
-	{
-		while (readings.size() > 0) {
-			const Reading r = PopReading(mu, readings);
-
-			if (r.type == "Temp") {
-				if (r.value > 37) {
-					tempOutput--;
-				}
-				else
-				{
-					tempOutput++;
-				}
-			}
-			else if(r.type == "Light")
-			{
-				if (r.value > 100) {
-					tempOutput--;
-				}
-				else
-				{
-					tempOutput++;
-				}
-			}
-			else
-			{
-				cout << "Reading type un-recognised" << endl;
-			}
-
-			cout << r;
-			handledReadings.push_back(r);
-		}
-	}
+	thread tempReader(ReadTempValuses, readingDelay_ms);
+	thread lightReader(ReadLightValues, readingDelay_ms);
+	thread readingProcesser(HandleReadings);
 
 	tempReader.join();
 	lightReader.join();
+	readingProcesser.join();
 }
