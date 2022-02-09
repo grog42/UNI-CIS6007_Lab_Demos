@@ -12,6 +12,7 @@
 using namespace std;
 using namespace std::chrono;
 
+//Global queue used by the diffrent threads when pushing and handling readings
 queue<Reading> readings;
 
 mutex mu;

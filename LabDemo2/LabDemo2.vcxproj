@@ -140,8 +140,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="LabDemo2.cpp" />
-    <ClCompile Include="RandomValGenerator.cpp" />
-    <ClCompile Include="Reading.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RandomValGenerator.h" />
