@@ -1,2 +1,12 @@
 ﻿  LabDemo3.cpp
+E:\Documents\WorkSpace\LabDemo3\LabDemo3.cpp(107,19): warning C4244: 'initializing': conversion from '_Rep' to 'int', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
+E:\Documents\WorkSpace\LabDemo3\LabDemo3.cpp(111,19): warning C4244: 'initializing': conversion from '_Rep' to 'int', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
   LabDemo3.vcxproj -> E:\Documents\WorkSpace\LabDemo3\x64\Debug\LabDemo3.exe
